@@ -1,11 +1,15 @@
 /* General Styling */
-body {
-    font-family: 'Helvetica Neue', Arial, sans-serif;
+* {
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
     background-color: #f9f9f9;
-    line-height: 1.6;
     color: #333;
+    line-height: 1.6;
     transition: background-color 0.3s, color 0.3s;
 }
 
@@ -14,18 +18,28 @@ body {
     color: #ddd;
 }
 
+/* Container */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
 /* Header Styling */
 header {
     background: linear-gradient(45deg, #333, #555);
     color: #fff;
-    padding: 1em;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    padding: 1em 0;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     position: sticky;
     top: 0;
     z-index: 1000;
+}
+
+header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 header h1 {
@@ -37,6 +51,13 @@ header h1 {
 header nav {
     display: flex;
     align-items: center;
+}
+
+header nav a {
+    color: #fff;
+    text-decoration: none;
+    margin-left: 1em;
+    transition: color 0.3s;
 }
 
 header nav a:hover {
@@ -58,12 +79,12 @@ header nav a:hover {
     outline: none;
 }
 
-#cart, #auth {
+#cart, #auth, #profile, #darkModeToggle {
     display: flex;
     align-items: center;
 }
 
-#cartButton, #loginButton, #registerButton {
+#cartButton, #loginButton, #registerButton, #profileButton {
     background-color: #007bff;
     color: #fff;
     border: none;
@@ -71,16 +92,16 @@ header nav a:hover {
     cursor: pointer;
     margin-left: 0.5em;
     border-radius: 4px;
-    transition: background-color 0.3s ease, transform 0.2s, box-shadow 0.3s;
+    transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
     box-shadow: 0 4px 6px rgba(0, 123, 255, 0.3);
 }
 
-#cartButton:hover, #loginButton:hover, #registerButton:hover {
+#cartButton:hover, #loginButton:hover, #registerButton:hover, #profileButton:hover {
     background-color: #0056b3;
     transform: translateY(-2px);
 }
 
-#cartButton:active, #loginButton:active, #registerButton:active {
+#cartButton:active, #loginButton:active, #registerButton:active, #profileButton:active {
     transform: translateY(0);
 }
 
@@ -90,7 +111,7 @@ header nav a:hover {
 
 #darkModeSwitch {
     margin-left: 0.5em;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s;
 }
 
 #darkModeSwitch:checked {
@@ -100,7 +121,6 @@ header nav a:hover {
 /* Dropdown Styling */
 .dropdown {
     position: relative;
-    display: inline-block;
 }
 
 .dropdown-content {
