@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A professional account creation page suitable for business-level applications with enhanced security and user interface.">
+    <title>Create Account</title>
+    <link rel="stylesheet" href="style2.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Registration Form -->
+        <form id="registerForm" class="active-form">
+            <h2>Create Account</h2>
+            <label for="register-username">Username:</label>
+            <input id="register-username" type="text" name="username" placeholder="Choose a username" required>
+            <label for="register-email">Email Address:</label>
+            <input id="register-email" type="email" name="email" placeholder="Enter your email" required>
+            <label for="register-password">Password:</label>
+            <input id="register-password" type="password" name="password" placeholder="Create a password" required>
+            <span class="password-toggle" onclick="togglePasswordVisibility('register-password')">Show</span>
+            <label for="register-confirm-password">Confirm Password:</label>
+            <input id="register-confirm-password" type="password" name="confirmPassword" placeholder="Confirm your password" required>
+            <button type="submit">Create Account</button>
+            <div class="form-toggle">
+                <p>Already registered? <a href="login.html">Sign In</a></p>
+            </div>
+        </form>
+    </div>
+    <div id="loader"></div>
+    <div id="feedback"></div>
+    <script src="main2.js"></script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Register</h1>
+    </header>
+    <main>
+        <form id="registerForm">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+            <button type="submit">Register</button>
+        </form>
+        <p>Already have an account? <a href="login.html">Login here</a></p>
+    </main>
+    <script src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced E-Commerce</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <meta name="description" content="Enhanced E-Commerce platform for a better shopping experience.">
+    <meta name="keywords" content="e-commerce, online shopping, electronics, gadgets">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <img src="Logo/Logo.png" alt="Enhanced E-Commerce Logo" style="height: 50px;">
+            <h1>Enhanced E-Commerce</h1>
+            <nav>
+                <input type="text" id="searchBar" placeholder="Search products..." aria-label="Search products">
+                <div class="dropdown">
+                    <button class="dropbtn">Categories</button>
+                    <div class="dropdown-content">
+                        <a href="#">Electronics</a>
+                        <a href="#">Gadgets</a>
+                        <a href="#">Clothing</a>
+                        <!-- Add more categories as needed -->
+                    </div>
+                </div>
+                <div id="cart">
+                    <button id="cartButton" aria-label="View cart">Cart (<span id="cartCount">0</span>)</button>
+                </div>
+                <div id="wishlist">
+                    <button id="wishlistButton">Wishlist (<span id="wishlistCount">0</span>)</button>
+                </div>
+                <div id="auth">
+                    <button id="loginButton">Login</button>
+                    <button id="registerButton">Register</button>
+                </div>
+                <div id="profile">
+                    <button id="profileButton">Profile</button>
+                </div>
+                <div id="darkModeToggle">
+                    <label for="darkModeSwitch">Dark Mode:</label>
+                    <input type="checkbox" id="darkModeSwitch">
+                </div>
+            </nav>
+        </div>
+    </header>
+    <main>
+        <section id="filter" class="container">
+            <label for="priceRange">Filter by price:</label>
+            <input type="range" id="priceRange" name="priceRange" min="0" max="1000">
+            <span id="priceValue">Max Price: $1000</span>
+        </section>
+        <section id="products" class="container">
+            <h2>Products</h2>
+            <!-- Product items will be dynamically inserted here -->
+        </section>
+        <section id="cartSummary" class="container">
+            <h2>Your Cart</h2>
+            <ul id="cartItemsSummary">
+                <li>Your cart is empty.</li>
+            </ul>
+            <div id="cartTotalContainer">
+                <span id="cartTotal">Total: $0.00 USD</span>
+                <button id="checkoutButton">Checkout</button>
+            </div>
+            <button id="emptyCartButton">Empty Cart</button>
+            <div id="discount">
+                <input type="text" id="discountCodeInput" placeholder="Discount code">
+                <button id="applyDiscountButton">Apply Discount</button>
+            </div>
+        </section>
+    </main>
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="authTitle">Login</h2>
+            <form id="authForm1">
+                <label for="email1">Email:</label>
+                <input type="email" id="email1" name="email" required>
+                <label for="password1">Password:</label>
+                <input type="password" id="password1" name="password" required>
+                <button type="submit" id="authSubmit1">Submit</button>
+            </form>
+        </div>
+    </div>
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="productTitle">Product Details</h2>
+            <img id="productImage" src="" alt="Product Image">
+            <p id="productDescription"></p>
+            <p id="productPrice"></p>
+            <div id="productRating">
+                <label for="rating">Rating:</label>
+                <select id="rating">
+                    <option value="1">1 Star</option>
+                    <option value="2">2 Stars</option>
+                    <option value="3">3 Stars</option>
+                    <option value="4">4 Stars</option>
+                    <option value="5">5 Stars</option>
+                </select>
+            </div>
+            <div id="productReviews">
+                <h3>Reviews:</h3>
+                <ul id="reviewsList">
+                    <!-- Reviews will be dynamically inserted here -->
+                </ul>
+            </div>
+            <button id="addToCartFromModal">Add to Cart</button>
+        </div>
+    </div>
+    <div id="notification" class="notification">Product added to cart</div>
+    <div id="loadingSpinner" class="spinner"></div>
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Enhanced E-Commerce. All rights reserved.</p>
+        </div>
+    </footer>
+    <script src="cart.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>

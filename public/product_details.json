@@ -1,0 +1,32 @@
+[
+    {
+        "name": "Stylish Headphones",
+        "price": 250,
+        "description": "High-quality sound and noise cancellation.",
+        "imageUrl": "headphones.jpg"
+    },
+    {
+        "name": "Gaming Keyboard",
+        "price": 150,
+        "description": "Mechanical keys for a superior gaming experience.",
+        "imageUrl": "keyboard.jpg"
+    },
+    {
+        "name": "HD Monitor",
+        "price": 300,
+        "description": "Crystal clear display for all your needs.",
+        "imageUrl": "monitor.jpg"
+    },
+    {
+        "name": "Wireless Mouse",
+        "price": 50,
+        "description": "Ergonomic design with high precision.",
+        "imageUrl": "mouse.jpg"
+    },
+    {
+        "name": "Bluetooth Speaker",
+        "price": 120,
+        "description": "Rich sound quality with deep bass.",
+        "imageUrl": "speaker.jpg"
+    }
+]

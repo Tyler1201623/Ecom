@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A professional login page suitable for business-level applications with enhanced security and user interface.">
+    <title>Login</title>
+    <link rel="stylesheet" href="style2.css">
+</head>
+<body>
+    <header>
+        <h1>Login</h1>
+    </header>
+    <main>
+        <div class="container">
+            <!-- Login Form -->
+            <form id="loginForm" class="active-form">
+                <h2>Login</h2>
+                <label for="login-email">Email:</label>
+                <input id="login-email" type="email" name="email" placeholder="Enter your email" required>
+                <label for="login-password">Password:</label>
+                <input id="login-password" type="password" name="password" placeholder="Enter your password" required>
+                <span class="password-toggle" onclick="togglePasswordVisibility('login-password')">Show</span>
+                <button type="submit">Log In</button>
+                <div class="form-toggle">
+                    <p>Not registered? <a href="create.html">Create an account</a></p>
+                </div>
+                <label><input type="checkbox" name="remember"> Remember Me</label>
+            </form>
+        </div>
+    </main>
+    <div id="loader"></div>
+    <div id="feedback"></div>
+    <script>
+        function togglePasswordVisibility(passwordFieldId) {
+            const passwordField = document.getElementById(passwordFieldId);
+            if (passwordField.type === "password") {
+                passwordField.type = "text";
+            } else {
+                passwordField.type = "password";
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginForm = document.getElementById('loginForm');
+            const loader = document.getElementById('loader');
+            const feedback = document.getElementById('feedback');
+
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = e.target.email.value;
+                const password = e.target.password.value;
+                loader.style.display = 'block';
+
+                try {
+                    const response = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    });
+                    const data = await response.json();
+                    loader.style.display = 'none';
+                    
+                    if (data.success) {
+                        feedback.className = 'success';
+                        feedback.textContent = 'Login successful. Redirecting...';
+                        feedback.style.display = 'block';
+                        setTimeout(() => {
+                            window.location.href = 'index.html';
+                        }, 2000);
+                    } else {
+                        feedback.className = 'error';
+                        feedback.textContent = 'Login failed: ' + data.message;
+                        feedback.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    loader.style.display = 'none';
+                    feedback.className = 'error';
+                    feedback.textContent = 'An error occurred. Please try again.';
+                    feedback.style.display = 'block';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

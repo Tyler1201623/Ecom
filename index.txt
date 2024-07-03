@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced E-Commerce Store</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', sans-serif; margin: 0; padding: 0; box-sizing: border-box; background-color: #f4f4f4; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 20px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .product { border: 1px solid #ddd; padding: 20px; margin-bottom: 20px; display: flex; background: #fff; transition: box-shadow 0.3s ease; }
+        .product:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+        .product img { width: 200px; height: 200px; object-fit: cover; margin-right: 20px; border-radius: 10px; }
+        .cart, .product-details { flex: 1; }
+        .product-description { font-size: 14px; color: #666; margin-top: 10px; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 10px; background: #f9f9f9; border-radius: 5px; }
+        .cart-item p { margin: 0; }
+        .btn { cursor: pointer; background-color: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 5px; transition: background-color 0.3s ease; }
+        .btn:hover { background-color: #0056b3; }
+        .btn-danger { background-color: #dc3545; }
+        .btn-danger:hover { background-color: #bd2130; }
+        .btn-secondary { background-color: #6c757d; }
+        .btn-secondary:hover { background-color: #545b62; }
+        .cart-total, .checkout, .filter { text-align: right; margin-top: 20px; }
+        .filter input[type="range"] { width: 100%; }
+        .checkout-form { display: flex; flex-direction: column; gap: 10px; }
+        .checkout-form input, .checkout-form button { padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        .checkout-form input:focus, .checkout-form button:focus { border-color: #007bff; }
+        .validation-error { color: #dc3545; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="filter">
+        <label for="priceFilter">Filter by price:</label>
+        <input type="range" id="priceFilter" min="0" max="1000" oninput="filterProducts(this.value)" value="1000">
+        <span id="filterValue">Max Price: $1000</span>
+    </div>
+
+    <h2>Products</h2>
+    <div id="products"></div>
+
+    <h2>Your Cart</h2>
+    <div id="cart"></div>
+
+    <div class="checkout">
+        <button class="btn" onclick="toggleCheckoutForm()">Checkout</button>
+    </div>
+
+    <div id="checkoutForm" class="checkout-form" style="display:none;">
+        <input type="text" id="name" placeholder="Your Name" required>
+        <input type="email" id="email" placeholder="Your Email" required>
+        <input type="tel" id="phone" placeholder="Phone Number" pattern="[0-9]{10}" title="Ten digit phone number" required>
+        <input type="text" id="zip" placeholder="ZIP Code" pattern="[0-9]{5}" title="Five digit ZIP code" required>
+        <input type="text" id="company" placeholder="Company (optional)">
+        <input type="text" id="cardNumber" placeholder="Card Number" pattern="\d{16}" title="Sixteen digit card number without spaces" required>
+        <input type="text" id="cardExpiration" placeholder="Expiration Date MM/YY" pattern="(0[1-9]|1[0-2])\/?([0-9]{2})" title="MM/YY format" required>
+        <input type="text" id="cardCvv" placeholder="CVV" pattern="\d{3}" title="Three digit CVV" required>
+        <div>
+            <button class="btn" type="button" onclick="validateCheckout()">Confirm Purchase</button>
+            <button class="btn btn-secondary" type="button" onclick="toggleCheckoutForm()">Cancel</button>
+        </div>
+        <p id="validationErrors" class="validation-error"></p>
+    </div>
+</div>
+
+<script>
+// Products array could be fetched from an API in a real-world app
+const products = [
+    { id: 1, name: 'Stylish Headphones', price: 250, image: 'images/headphones.jpg', description: 'High-quality sound and noise cancellation.' },
+    { id: 2, name: 'Ergonomic Keyboard', price: 150, image: 'images/keyboard.jpg', description: 'Comfortable typing for long work sessions.' },
+    { id: 3, name: 'Gaming Mouse', price: 85, image: 'images/mouse.jpg', description: 'Precision and durability for gamers.' },
+    { id: 4, name: 'HD Monitor', price: 200, image: 'images/monitor.jpg', description: 'Crisp visuals for gaming and video editing.' },
+    { id: 5, name: 'Bluetooth Speaker', price: 120, image: 'images/speaker.jpg', description: 'Portable sound with deep bass.' }
+];
+let cart = JSON.parse(localStorage.getItem('cart')) || {};
+
+function displayProducts(filterPrice = 1000) {
+    document.getElementById('filterValue').textContent = `Max Price: $${filterPrice}`;
+    const productsContainer = document.getElementById('products');
+    productsContainer.innerHTML = products.filter(product => product.price <= filterPrice).map(product => `
+        <div class="product">
+            <img src="${product.image}" alt="${product.name}">
+            <div class="product-details">
+                <h3>${product.name}</h3>
+                <p>$${product.price}</p>
+                <div class="product-description">${product.description}</div>
+                <button class="btn" onclick="addToCart(${product.id})">Add to Cart</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function filterProducts(value) {
+    document.getElementById('filterValue').textContent = `Max Price: $${value}`;
+    displayProducts(value);
+}
+
+function addToCart(productId) {
+    const product = products.find(p => p.id === productId);
+    if (!cart[productId]) {
+        cart[productId] = { ...product, quantity: 1 };
+    } else {
+        cart[productId].quantity++;
+    }
+    updateCart();
+}
+
+function removeFromCart(productId) {
+    if (cart[productId] && cart[productId].quantity > 1) {
+        cart[productId].quantity--;
+    } else {
+        delete cart[productId];
+    }
+    updateCart();
+}
+
+function updateCart() {
+    localStorage.setItem('cart', JSON.stringify(cart));
+    displayCart();
+}
+
+function displayCart() {
+    const cartContainer = document.getElementById('cart');
+    const items = Object.values(cart);
+    if (items.length === 0) {
+        cartContainer.innerHTML = '<p>Your cart is empty.</p>';
+    } else {
+        cartContainer.innerHTML = items.map(item => `
+            <div class="cart-item">
+                <p>${item.name} - $${item.price} x ${item.quantity}</p>
+                <button class="btn btn-danger" onclick="removeFromCart(${item.id})">Remove</button>
+            </div>
+        `).join('');
+        
+        const total = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+        cartContainer.innerHTML += `<div class="cart-total"><strong>Total: $${total.toFixed(2)}</strong></div>`;
+    }
+}
+
+function toggleCheckoutForm() {
+    const form = document.getElementById('checkoutForm');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+function validateCheckout() {
+    // Example of validation, more comprehensive checks should be implemented
+    let errors = [];
+    if (!document.getElementById('name').value.trim()) errors.push("Name is required.");
+    if (!document.getElementById('email').value.trim()) errors.push("Email is required.");
+    // Include other validation checks here
+
+    if (errors.length > 0) {
+        document.getElementById('validationErrors').innerHTML = errors.join('<br>');
+    } else {
+        // Simulate checkout success and clear cart
+        alert('Checkout successful. Thank you for your purchase!');
+        cart = {};
+        localStorage.removeItem('cart');
+        displayCart();
+        toggleCheckoutForm();
+    }
+}
+
+displayProducts();
+displayCart();
+</script>
+</body>
+</html>
