@@ -14,8 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const productModal = document.getElementById('productModal');
     const closeProductModal = productModal.querySelector('.close');
     const loadingSpinner = document.getElementById('loadingSpinner');
-    const emptyCartButton = document.getElementById('emptyCartButton');
-    const applyDiscountButton = document.getElementById('applyDiscountButton');
 
     // Redirect to login and register pages
     loginButton.addEventListener('click', () => {
@@ -148,26 +146,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize cart and products
     window.cart.loadCart();
     fetchProducts();
-
-    // Empty cart functionality
-    emptyCartButton.addEventListener('click', () => {
-        window.cart.emptyCart();
-        showNotification('Cart emptied');
-    });
-
-    // Apply discount functionality
-    applyDiscountButton.addEventListener('click', () => {
-        const discountCodeInput = document.getElementById('discountCodeInput').value;
-        window.cart.applyDiscount(discountCodeInput);
-    });
 });
 
 window.cart = {
     items: [],
-    discounts: {
-        'DISCOUNT10': 0.1,
-        'DISCOUNT20': 0.2
-    },
     loadCart: function() {
         const storedCart = localStorage.getItem('cart');
         if (storedCart) {
@@ -187,25 +169,6 @@ window.cart = {
         }
         this.saveCart();
         this.updateCartDisplay();
-    },
-    emptyCart: function() {
-        this.items = [];
-        this.saveCart();
-        this.updateCartDisplay();
-    },
-    applyDiscount: function(code) {
-        const discount = this.discounts[code];
-        if (discount) {
-            this.items = this.items.map(item => ({
-                ...item,
-                price: item.price * (1 - discount)
-            }));
-            this.saveCart();
-            this.updateCartDisplay();
-            showNotification(`Discount ${code} applied!`);
-        } else {
-            showNotification('Invalid discount code');
-        }
     },
     updateCartDisplay: function() {
         const cartCount = document.getElementById('cartCount');
