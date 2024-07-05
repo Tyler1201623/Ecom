@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadingSpinner = document.getElementById('loadingSpinner');
     const emptyCartButton = document.getElementById('emptyCartButton');
     const applyDiscountButton = document.getElementById('applyDiscountButton');
+    const checkoutButton = document.getElementById('checkoutButton'); // Add this line
 
     // Redirect to login and register pages
     loginButton.addEventListener('click', () => {
@@ -159,6 +160,11 @@ document.addEventListener('DOMContentLoaded', () => {
     applyDiscountButton.addEventListener('click', () => {
         const discountCodeInput = document.getElementById('discountCodeInput').value;
         window.cart.applyDiscount(discountCodeInput);
+    });
+
+    // Redirect to checkout page
+    checkoutButton.addEventListener('click', () => {
+        window.location.href = 'checkout.html';
     });
 });
 
