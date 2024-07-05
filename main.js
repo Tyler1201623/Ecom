@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadingSpinner = document.getElementById('loadingSpinner');
     const emptyCartButton = document.getElementById('emptyCartButton');
     const applyDiscountButton = document.getElementById('applyDiscountButton');
-    const checkoutButton = document.getElementById('checkoutButton'); // Add this line
+    const checkoutButton = document.getElementById('checkoutButton');
 
     // Redirect to login and register pages
     loginButton.addEventListener('click', () => {
@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-window.cart = {
+const cart = {
     items: [],
     discounts: {
         'DISCOUNT10': 0.1,
@@ -248,6 +248,8 @@ window.cart = {
         }
     }
 };
+
+window.cart = cart;
 
 function showNotification(message) {
     const notification = document.getElementById('notification');

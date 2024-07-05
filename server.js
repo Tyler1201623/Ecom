@@ -17,8 +17,7 @@ const productRoutes = require('./routes/productRoutes');
 const cartRoutes = require('./routes/cartRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandlerMiddleware');
-const Product = require('./models/Product');
-const Order = require('./models/Order');
+const Order = require('./models/Order'); // Ensure you have created the Order model
 
 dotenv.config();
 
@@ -69,7 +68,7 @@ app.use(limiter);
 const speedLimiter = slowDown({
     windowMs: 15 * 60 * 1000,
     delayAfter: 50,
-    delayMs: 500
+    delayMs: 500 // Fixed delayMs value for express-slow-down v2
 });
 app.use(speedLimiter);
 
@@ -93,10 +92,6 @@ app.get('/login.html', (req, res) => {
 
 app.get('/create.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'create.html'));
-});
-
-app.get('/checkout.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'checkout.html'));
 });
 
 // Admin routes for fetching, updating, and deleting products
