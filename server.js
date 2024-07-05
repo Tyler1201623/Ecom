@@ -12,12 +12,15 @@ const morgan = require('morgan');
 const dotenv = require('dotenv');
 const compression = require('compression');
 const hpp = require('hpp');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const nodemailer = require('nodemailer');
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
 const cartRoutes = require('./routes/cartRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandlerMiddleware');
-const Order = require('./models/Order'); // Ensure you have created the Order model
+const Order = require('./models/Order');
+const Product = require('./models/Product');
 
 dotenv.config();
 
@@ -68,7 +71,7 @@ app.use(limiter);
 const speedLimiter = slowDown({
     windowMs: 15 * 60 * 1000,
     delayAfter: 50,
-    delayMs: 500 // Fixed delayMs value for express-slow-down v2
+    delayMs: 500
 });
 app.use(speedLimiter);
 
@@ -135,26 +138,60 @@ app.delete('/api/admin/delete/:id', async (req, res) => {
 
 // Checkout route
 app.post('/api/checkout', async (req, res) => {
-    const { fullName, address, city, state, zip, country, cardNumber, expiryDate, cvv, cart } = req.body;
-
-    // Here you would typically process the payment using a payment gateway like Stripe
-
-    // For demonstration, we'll skip the actual payment processing
-
-    // Save order details to the database
-    const order = new Order({
-        fullName,
-        address,
-        city,
-        state,
-        zip,
-        country,
-        cart,
-        status: 'Pending' // or 'Completed' based on payment gateway response
-    });
+    const { fullName, address, city, state, zip, country, cardNumber, expiryDate, cvv, cart, email } = req.body;
 
     try {
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: cart.reduce((total, item) => total + item.price * item.quantity, 0) * 100, // Amount in cents
+            currency: 'usd',
+            payment_method_data: {
+                type: 'card',
+                card: {
+                    number: cardNumber,
+                    exp_month: parseInt(expiryDate.split('/')[0]),
+                    exp_year: parseInt(expiryDate.split('/')[1]),
+                    cvc: cvv,
+                },
+            },
+            confirm: true,
+        });
+
+        const order = new Order({
+            fullName,
+            address,
+            city,
+            state,
+            zip,
+            country,
+            cart,
+            status: 'Completed',
+            paymentIntentId: paymentIntent.id,
+        });
+
         await order.save();
+
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+            },
+        });
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Order Confirmation',
+            text: `Thank you for your order, ${fullName}! Your order ID is ${order._id}.`,
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                return console.error('Error sending email:', error);
+            }
+            console.log('Email sent:', info.response);
+        });
+
         res.send({ success: true, message: 'Order placed successfully' });
     } catch (error) {
         console.error('Error placing order:', error);
