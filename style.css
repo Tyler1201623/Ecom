@@ -7,6 +7,9 @@ body {
     line-height: 1.6;
     color: #333;
     transition: background-color 0.3s, color 0.3s;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
 .dark-mode {
@@ -441,10 +444,9 @@ footer {
     color: #fff;
     padding: 1em;
     text-align: center;
-    position: fixed;
-    bottom: 0;
     width: 100%;
     box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+    margin-top: auto;
 }
 
 footer.sticky-footer {
@@ -745,4 +747,9 @@ input[type="checkbox"]:checked + label::after, input[type="radio"]:checked + lab
     height: 8px;
     border-radius: 50%;
     background: #fff;
+}
+
+/* Fix Footer Issue */
+#cartSummary {
+    margin-bottom: 3em;
 }
