@@ -18,6 +18,7 @@ const cartRoutes = require('./routes/cartRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandlerMiddleware');
 const Product = require('./models/Product');
+const Order = require('./models/Order');
 
 dotenv.config();
 
@@ -68,7 +69,7 @@ app.use(limiter);
 const speedLimiter = slowDown({
     windowMs: 15 * 60 * 1000,
     delayAfter: 50,
-    delayMs: 500 // Fixed delayMs value for express-slow-down v2
+    delayMs: 500
 });
 app.use(speedLimiter);
 
@@ -92,6 +93,10 @@ app.get('/login.html', (req, res) => {
 
 app.get('/create.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'create.html'));
+});
+
+app.get('/checkout.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'checkout.html'));
 });
 
 // Admin routes for fetching, updating, and deleting products
@@ -130,6 +135,35 @@ app.delete('/api/admin/delete/:id', async (req, res) => {
         res.json({ success: true, message: 'Product deleted successfully' });
     } catch (err) {
         res.status(500).json({ success: false, message: 'Error deleting product', error: err.message });
+    }
+});
+
+// Checkout route
+app.post('/api/checkout', async (req, res) => {
+    const { fullName, address, city, state, zip, country, cardNumber, expiryDate, cvv, cart } = req.body;
+
+    // Here you would typically process the payment using a payment gateway like Stripe
+
+    // For demonstration, we'll skip the actual payment processing
+
+    // Save order details to the database
+    const order = new Order({
+        fullName,
+        address,
+        city,
+        state,
+        zip,
+        country,
+        cart,
+        status: 'Pending' // or 'Completed' based on payment gateway response
+    });
+
+    try {
+        await order.save();
+        res.send({ success: true, message: 'Order placed successfully' });
+    } catch (error) {
+        console.error('Error placing order:', error);
+        res.status(500).send({ success: false, message: 'Failed to place order', error: error.message });
     }
 });
 
