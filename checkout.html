@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="checkout.css">
 </head>
 <body>
     <header>
@@ -12,26 +12,33 @@
     </header>
     <main>
         <form id="checkoutForm">
-            <h2>Billing Details</h2>
-            <label for="fullName">Full Name</label>
+            <label for="fullName">Full Name:</label>
             <input type="text" id="fullName" name="fullName" required>
-            <label for="address">Address</label>
+            
+            <label for="address">Address:</label>
             <input type="text" id="address" name="address" required>
-            <label for="city">City</label>
+            
+            <label for="city">City:</label>
             <input type="text" id="city" name="city" required>
-            <label for="state">State</label>
+            
+            <label for="state">State:</label>
             <input type="text" id="state" name="state" required>
-            <label for="zip">Zip Code</label>
+            
+            <label for="zip">ZIP Code:</label>
             <input type="text" id="zip" name="zip" required>
-            <label for="country">Country</label>
+            
+            <label for="country">Country:</label>
             <input type="text" id="country" name="country" required>
-            <h2>Payment Details</h2>
-            <label for="cardNumber">Card Number</label>
+            
+            <label for="cardNumber">Card Number:</label>
             <input type="text" id="cardNumber" name="cardNumber" required>
-            <label for="expiryDate">Expiry Date</label>
+            
+            <label for="expiryDate">Expiry Date:</label>
             <input type="text" id="expiryDate" name="expiryDate" required>
-            <label for="cvv">CVV</label>
+            
+            <label for="cvv">CVV:</label>
             <input type="text" id="cvv" name="cvv" required>
+            
             <button type="submit">Place Order</button>
         </form>
     </main>
