@@ -259,3 +259,34 @@ function showNotification(message) {
         notification.classList.remove('show');
     }, 3000);
 }
+
+// Enhanced: Personalized Recommendations
+async function fetchRecommendations() {
+    try {
+        const response = await fetch('/api/recommendations');
+        const recommendations = await response.json();
+
+        const recommendationsContainer = document.getElementById('recommendations');
+        recommendationsContainer.innerHTML = '';
+        recommendations.forEach(recommendation => {
+            const recommendationElement = document.createElement('div');
+            recommendationElement.classList.add('recommendation');
+            recommendationElement.innerHTML = `
+                <img src="images/${recommendation.imageUrl}" alt="${recommendation.name}">
+                <div class="recommendation-info">
+                    <h3>${recommendation.name}</h3>
+                    <p>$${recommendation.price}</p>
+                    <p>${recommendation.description}</p>
+                    <button class="add-to-cart">Add to Cart</button>
+                </div>
+            `;
+            recommendationsContainer.appendChild(recommendationElement);
+        });
+        attachProductEventListeners();
+    } catch (error) {
+        console.error('Error fetching recommendations:', error);
+    }
+}
+
+// Load recommendations
+fetchRecommendations();
