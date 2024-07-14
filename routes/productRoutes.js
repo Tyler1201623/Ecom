@@ -13,7 +13,7 @@ const { authorize } = require('../middleware/authorizeMiddleware');
 const { validateRequest } = require('../middleware/validateRequestMiddleware');
 const { errorHandler } = require('../middleware/errorHandlerMiddleware');
 const { cacheMiddleware, clearCache } = require('../middleware/cacheMiddleware');
-const { logAction } = require('../middleware/logMiddleware');
+const { logAction, logMiddleware } = require('../middleware/logMiddleware');
 
 const router = express.Router();
 
@@ -50,14 +50,14 @@ const productValidationRules = [
  * @desc    Get all products with pagination, search, and filtering
  * @access  Public
  */
-router.get('/', apiLimiter, cacheMiddleware(30), getAllProducts);
+router.get('/', apiLimiter, cacheMiddleware(600), logMiddleware, getAllProducts);
 
 /**
  * @route   GET /api/products/:id
  * @desc    Get detailed information about a product
  * @access  Public
  */
-router.get('/:id', apiLimiter, getProductDetails);
+router.get('/:id', apiLimiter, logMiddleware, getProductDetails);
 
 /**
  * @route   POST /api/products
@@ -67,7 +67,7 @@ router.get('/:id', apiLimiter, getProductDetails);
 router.post(
     '/',
     authenticate,
-    authorize(['admin']), // Updated to call the function correctly
+    authorize(['admin']),
     createUpdateLimiter,
     productValidationRules,
     validateRequest,
@@ -90,7 +90,7 @@ router.post(
 router.put(
     '/:id',
     authenticate,
-    authorize(['admin']), // Updated to call the function correctly
+    authorize(['admin']),
     createUpdateLimiter,
     productValidationRules,
     validateRequest,
@@ -110,14 +110,21 @@ router.put(
  * @desc    Delete a product
  * @access  Private (Admin only)
  */
-router.delete('/:id', authenticate, authorize(['admin']), createUpdateLimiter, logAction('deleteProduct'), async (req, res, next) => {
-    try {
-        await deleteProduct(req, res);
-        clearCache('/api/products'); // Invalidate cache
-    } catch (err) {
-        next(err);
+router.delete(
+    '/:id',
+    authenticate,
+    authorize(['admin']),
+    createUpdateLimiter,
+    logAction('deleteProduct'),
+    async (req, res, next) => {
+        try {
+            await deleteProduct(req, res);
+            clearCache('/api/products'); // Invalidate cache
+        } catch (err) {
+            next(err);
+        }
     }
-});
+);
 
 /**
  * Error handling middleware

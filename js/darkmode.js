@@ -2,21 +2,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const darkModeSwitch = document.getElementById('darkModeSwitch');
     const body = document.body;
 
+    const enableDarkMode = () => {
+        body.classList.add('dark-mode');
+        localStorage.setItem('darkMode', 'enabled');
+    };
+
+    const disableDarkMode = () => {
+        body.classList.remove('dark-mode');
+        localStorage.setItem('darkMode', 'disabled');
+    };
+
     darkModeSwitch.addEventListener('change', () => {
         if (darkModeSwitch.checked) {
-            body.classList.add('dark-mode');
-            localStorage.setItem('darkMode', 'enabled');
+            enableDarkMode();
         } else {
-            body.classList.remove('dark-mode');
-            localStorage.setItem('darkMode', 'disabled');
+            disableDarkMode();
         }
     });
 
     if (localStorage.getItem('darkMode') === 'enabled') {
         darkModeSwitch.checked = true;
-        body.classList.add('dark-mode');
+        enableDarkMode();
     } else {
         darkModeSwitch.checked = false;
-        body.classList.remove('dark-mode');
+        disableDarkMode();
     }
 });

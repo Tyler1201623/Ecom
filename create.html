@@ -6,6 +6,129 @@
     <meta name="description" content="A professional account creation page suitable for business-level applications with enhanced security and user interface.">
     <title>Create Account</title>
     <link rel="stylesheet" href="style2.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 400px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+
+        input[type="text"], input[type="email"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .password-toggle {
+            float: right;
+            margin-top: -30px;
+            margin-right: 10px;
+            cursor: pointer;
+            color: #007BFF;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 20px;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .form-toggle {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .form-toggle a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+
+        .form-toggle a:hover {
+            text-decoration: underline;
+        }
+
+        #loader {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 16px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 16px solid #007BFF;
+            width: 120px;
+            height: 120px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #feedback {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+
+        #feedback.show {
+            display: block;
+        }
+
+        .password-strength {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .password-strength.weak {
+            color: red;
+        }
+
+        .password-strength.medium {
+            color: orange;
+        }
+
+        .password-strength.strong {
+            color: green;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -19,6 +142,7 @@
             <label for="register-password">Password:</label>
             <input id="register-password" type="password" name="password" placeholder="Create a password" required>
             <span class="password-toggle" onclick="togglePasswordVisibility('register-password')">Show</span>
+            <div id="passwordStrength" class="password-strength"></div>
             <label for="register-confirm-password">Confirm Password:</label>
             <input id="register-confirm-password" type="password" name="confirmPassword" placeholder="Confirm your password" required>
             <button type="submit">Create Account</button>
@@ -29,31 +153,280 @@
     </div>
     <div id="loader"></div>
     <div id="feedback"></div>
-    <script src="main2.js"></script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <header>
-        <h1>Register</h1>
-    </header>
-    <main>
-        <form id="registerForm">
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required>
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required>
-            <button type="submit">Register</button>
-        </form>
-        <p>Already have an account? <a href="login.html">Login here</a></p>
-    </main>
-    <script src="main.js"></script>
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = e.target.username.value;
+            const email = e.target.email.value;
+            const password = e.target.password.value;
+            const confirmPassword = e.target.confirmPassword.value;
+
+            if (password !== confirmPassword) {
+                showFeedback('Passwords do not match');
+                return;
+            }
+
+            showLoader(true);
+
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+
+                const data = await response.json();
+                showLoader(false);
+
+                if (response.status === 201) {
+                    showFeedback('Registration successful. Please check your email for verification.');
+                } else {
+                    showFeedback('Registration failed: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showLoader(false);
+                showFeedback('An error occurred. Please try again.');
+            }
+        });
+
+        function togglePasswordVisibility(inputId) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+            } else {
+                input.type = 'password';
+            }
+        }
+
+        function showLoader(visible) {
+            const loader = document.getElementById('loader');
+            loader.style.display = visible ? 'block' : 'none';
+        }
+
+        function showFeedback(message) {
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = message;
+            feedback.classList.add('show');
+            setTimeout(() => {
+                feedback.classList.remove('show');
+            }, 3000);
+        }
+
+        const passwordInput = document.getElementById('register-password');
+        const passwordStrength = document.getElementById('passwordStrength');
+
+        passwordInput.addEventListener('input', () => {
+            const strength = checkPasswordStrength(passwordInput.value);
+            passwordStrength.textContent = strength.message;
+            passwordStrength.className = 'password-strength ' + strength.className;
+        });
+
+        function checkPasswordStrength(password) {
+            let strength = { message: 'Weak', className: 'weak' };
+            if (password.length >= 8) {
+                strength.message = 'Medium';
+                strength.className = 'medium';
+                if (/[A-Z]/.test(password) && /\d/.test(password) && /[^A-Za-z0-9]/.test(password)) {
+                    strength.message = 'Strong';
+                    strength.className = 'strong';
+                }
+            }
+            return strength;
+        }
+
+        // Enhancements
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Sanitize inputs before submission
+            function sanitizeInput(value) {
+                const temp = document.createElement('div');
+                temp.textContent = value;
+                return temp.innerHTML;
+            }
+
+            document.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    const inputs = form.querySelectorAll('input');
+                    inputs.forEach(input => {
+                        input.value = sanitizeInput(input.value);
+                    });
+                });
+            });
+
+            // 2. Session timeout handling
+            let sessionTimeout;
+            function resetSessionTimeout() {
+                clearTimeout(sessionTimeout);
+                sessionTimeout = setTimeout(() => {
+                    alert('Session expired. Please log in again.');
+                    window.location.reload();
+                }, 30 * 60 * 1000); // 30 minutes
+            }
+
+            document.addEventListener('mousemove', resetSessionTimeout);
+            document.addEventListener('keypress', resetSessionTimeout);
+
+            // 3. Detailed error messages
+            function showError(input, message) {
+                input.classList.add('input-error');
+                const errorSpan = input.nextElementSibling;
+                errorSpan.textContent = message;
+                errorSpan.classList.add('error-message');
+            }
+
+            // 4. Remove detailed error messages on input
+            document.querySelectorAll('input').forEach(input => {
+                input.addEventListener('input', function() {
+                    if (input.classList.contains('input-error')) {
+                        input.classList.remove('input-error');
+                        const errorSpan = input.nextElementSibling;
+                        errorSpan.textContent = '';
+                        errorSpan.classList.remove('error-message');
+                    }
+                });
+            });
+
+            // 5. Enhance feedback with different types (info, warning)
+            function showFeedback(message, type) {
+                const feedback = document.getElementById('feedback');
+                feedback.textContent = message;
+                feedback.className = type;
+                feedback.style.display = 'block';
+                setTimeout(() => {
+                    feedback.style.display = 'none';
+                }, 5000);
+            }
+
+            // 6. Confirmation before leaving page with unsaved changes
+            let formChanged = false;
+            document.querySelectorAll('input').forEach(input => {
+                input.addEventListener('change', () => formChanged = true);
+            });
+            window.addEventListener('beforeunload', (e) => {
+                if (formChanged) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
+            });
+
+            // 7. Enhanced accessibility with focus indicators
+            const style = document.createElement('style');
+            style.innerHTML = `
+                input:focus, button:focus {
+                    outline: 2px solid #0056b3;
+                    outline-offset: 2px;
+                }
+            `;
+            document.head.appendChild(style);
+
+            // 8. Display user's input while typing with real-time feedback
+            document.querySelectorAll('input').forEach(input => {
+                input.addEventListener('input', function() {
+                    const feedbackSpan = document.getElementById(input.name + '-feedback');
+                    if (feedbackSpan) {
+                        feedbackSpan.textContent = input.value;
+                    }
+                });
+            });
+
+            // Add real-time feedback spans
+            document.getElementById('registerForm').insertAdjacentHTML('beforeend', '<span id="username-feedback"></span>');
+            document.getElementById('registerForm').insertAdjacentHTML('beforeend', '<span id="email-feedback"></span>');
+
+            // 9. Animation for form transitions
+            style.innerHTML += `
+                .hidden {
+                    opacity: 0;
+                    transition: opacity 0.5s ease-in-out;
+                }
+                .active-form {
+                    opacity: 1;
+                    transition: opacity 0.5s ease-in-out;
+                }
+            `;
+            document.head.appendChild(style);
+
+            // Apply animation classes
+            document.getElementById('registerForm').classList.add('active-form');
+
+            // 10. Prevent multiple form submissions
+            document.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    const submitButton = form.querySelector('button[type="submit"]');
+                    submitButton.disabled = true;
+                    setTimeout(() => {
+                        submitButton.disabled = false;
+                    }, 3000);
+                });
+            });
+
+            // 11. Add Two-Factor Authentication (2FA)
+            function requestTwoFactorAuth(email) {
+                // Simulate 2FA request
+                const code = prompt('Enter the 2FA code sent to your email:');
+                return code === '123456'; // Example 2FA code
+            }
+
+            document.getElementById('registerForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const emailInput = document.querySelector('#registerForm input[type="email"]');
+                const passwordInput = document.querySelector('#registerForm input[type="password"]');
+                if (validateForm(this) && requestTwoFactorAuth(emailInput.value)) {
+                    this.submit(); // Proceed with form submission if 2FA is successful
+                } else {
+                    showFeedback('Invalid 2FA code. Please try again.', 'error');
+                }
+            });
+
+            // 12. Rate Limiting
+            let registerAttempts = 0;
+            const maxRegisterAttempts = 10;
+
+            document.getElementById('registerForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                if (registerAttempts >= maxRegisterAttempts) {
+                    showFeedback('Too many registration attempts. Please try again later.', 'error');
+                    return;
+                }
+                if (validateForm(this)) {
+                    registerAttempts++;
+                    this.submit();
+                }
+            });
+
+            // 13. Implement CSRF Protection
+            function getCsrfToken() {
+                return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            }
+
+            document.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    const csrfToken = getCsrfToken();
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = '_csrf';
+                    csrfInput.value = csrfToken;
+                    form.appendChild(csrfInput);
+                });
+            });
+
+            // Log errors for administrative review
+            function logError(error) {
+                fetch('/log-error', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ error: error.toString() })
+                });
+            }
+
+            // Manage user session
+            function manageSession(token) {
+                localStorage.setItem('authToken', token);
+                // Further session management logic can be implemented here
+            }
+        });
+    </script>
 </body>
 </html>

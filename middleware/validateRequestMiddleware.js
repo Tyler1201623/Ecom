@@ -26,10 +26,12 @@ const translations = {
     en: {
         VALIDATION_EMAIL: 'Please enter a valid email address.',
         VALIDATION_PASSWORD: 'Password must be at least 8 characters long and include a number, an uppercase letter, and a special character.',
+        VALIDATION_FAILED: 'Validation failed. Please check the input data and try again.',
     },
     es: {
         VALIDATION_EMAIL: 'Por favor, introduce una dirección de correo electrónico válida.',
         VALIDATION_PASSWORD: 'La contraseña debe tener al menos 8 caracteres, incluyendo un número, una letra mayúscula, y un carácter especial.',
+        VALIDATION_FAILED: 'La validación falló. Por favor, revise los datos de entrada y vuelva a intentarlo.',
     }
 };
 
@@ -123,7 +125,7 @@ exports.validateRequestLocalized = (req, res, next) => {
         return res.status(400).json({
             status: 'fail',
             errors: formattedErrors,
-            message: translate('Validation failed. Please check the input data and try again.', locale),
+            message: translate('VALIDATION_FAILED', locale),
             timestamp: new Date().toISOString(),
             path: req.path
         });
@@ -131,5 +133,25 @@ exports.validateRequestLocalized = (req, res, next) => {
     next();
 };
 
+// Middleware to log validation results with timestamps and user info
+const logValidationResults = (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty() && enableLogging) {
+        console.error('Validation results:', {
+            errors: errors.array(),
+            path: req.path,
+            method: req.method,
+            body: req.body,
+            params: req.params,
+            query: req.query,
+            user: req.user ? req.user.id : 'unauthenticated',
+            ip: req.ip,
+            timestamp: new Date().toISOString()
+        });
+    }
+    next();
+};
+
 // Export the rate limiter for use in other modules
 exports.validationRateLimiter = validationRateLimiter;
+exports.logValidationResults = logValidationResults;

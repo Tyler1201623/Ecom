@@ -1,3 +1,4 @@
+// Toggle between login and registration forms
 function toggleForm(e) {
     e.preventDefault();
     const loginForm = document.getElementById('loginForm');
@@ -32,10 +33,10 @@ function validateForm(form) {
         if (!input.value.trim()) {
             valid = false;
             input.classList.add('input-error');
-            errorSpan.textContent = 'This field is required';
+            showError(input, 'This field is required');
         } else {
             input.classList.remove('input-error');
-            errorSpan.textContent = '';
+            if (errorSpan) errorSpan.textContent = '';
         }
     });
     
@@ -43,7 +44,7 @@ function validateForm(form) {
     if (emailInput && !validateEmail(emailInput.value)) {
         valid = false;
         emailInput.classList.add('input-error');
-        emailInput.nextElementSibling.textContent = 'Please enter a valid email address';
+        showError(emailInput, 'Please enter a valid email address');
     }
 
     const passwordInput = form.querySelector('input[type="password"]');
@@ -51,15 +52,15 @@ function validateForm(form) {
     if (passwordInput) {
         const strength = getPasswordStrength(passwordInput.value);
         const strengthSpan = document.getElementById('passwordStrength');
-        strengthSpan.textContent = `Password strength: ${strength}`;
+        if (strengthSpan) strengthSpan.textContent = `Password strength: ${strength}`;
         
         if (confirmPasswordInput && passwordInput.value !== confirmPasswordInput.value) {
             valid = false;
             confirmPasswordInput.classList.add('input-error');
-            confirmPasswordInput.nextElementSibling.textContent = 'Passwords do not match';
+            showError(confirmPasswordInput, 'Passwords do not match');
         } else if (confirmPasswordInput) {
             confirmPasswordInput.classList.remove('input-error');
-            confirmPasswordInput.nextElementSibling.textContent = '';
+            if (confirmPasswordInput.nextElementSibling) confirmPasswordInput.nextElementSibling.textContent = '';
         }
     }
 
@@ -132,7 +133,7 @@ function showFeedback(message, type) {
 document.getElementById('register-password').addEventListener('input', function() {
     const strength = getPasswordStrength(this.value);
     const strengthSpan = document.getElementById('passwordStrength');
-    strengthSpan.textContent = `Password strength: ${strength}`;
+    if (strengthSpan) strengthSpan.textContent = `Password strength: ${strength}`;
 });
 
 // Client-side encryption (example using CryptoJS)

@@ -24,6 +24,7 @@ body, html {
     border-radius: 10px;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
     text-align: center;
+    animation: fadeIn 1s ease-in-out;
 }
 
 h2 {
@@ -49,6 +50,7 @@ input[type="text"], input[type="password"], input[type="email"] {
     font-size: 14px;
     background: #f9f9f9;
     transition: background 0.3s, border-color 0.3s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus {
@@ -67,6 +69,7 @@ button {
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.3s;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 button:hover {
@@ -83,6 +86,7 @@ button:hover {
     text-decoration: none;
     font-weight: 600;
     transition: color 0.3s;
+    font-size: 14px;
 }
 
 .form-toggle a:hover {
@@ -94,10 +98,6 @@ button:hover {
 }
 
 /* Additional styles for better user experience */
-.container {
-    animation: fadeIn 1s ease-in-out;
-}
-
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -107,18 +107,6 @@ button:hover {
         opacity: 1;
         transform: translateY(0);
     }
-}
-
-input[type="text"], input[type="password"], input[type="email"] {
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-button {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.form-toggle a {
-    font-size: 14px;
 }
 
 .input-error {

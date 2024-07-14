@@ -13,7 +13,8 @@ const productSchema = new mongoose.Schema({
     name: { 
         type: String, 
         required: [true, 'Product name is required'],
-        trim: true
+        trim: true,
+        unique: true
     },
     price: { 
         type: Number, 
@@ -100,34 +101,123 @@ productSchema.virtual('effectivePrice').get(function() {
 
 // Method to update product stock
 productSchema.methods.updateStock = function(quantity) {
-    this.stock = this.stock - quantity;
+    this.stock -= quantity;
     return this.save();
 };
 
 // Method to add a review
-productSchema.methods.addReview = function(userId, rating, comment) {
+productSchema.methods.addReview = async function(userId, rating, comment) {
     const review = { user: userId, rating, comment };
     this.reviews.push(review);
-    this.ratings.count = this.reviews.length;
-    this.ratings.average = this.reviews.reduce((sum, review) => sum + review.rating, 0) / this.reviews.length;
+    await this.calculateAverageRating();
     return this.save();
 };
 
 // Method to calculate and update average rating
-productSchema.methods.calculateAverageRating = function() {
+productSchema.methods.calculateAverageRating = async function() {
     if (this.reviews.length > 0) {
         this.ratings.average = this.reviews.reduce((sum, review) => sum + review.rating, 0) / this.reviews.length;
     } else {
         this.ratings.average = 0;
     }
     this.ratings.count = this.reviews.length;
-    return this.save();
+    await this.save();
 };
 
 // Method to soft delete a product
 productSchema.methods.softDelete = function() {
     this.deleted = true;
     return this.save();
+};
+
+// Method to search products by name, description, category, or tags
+productSchema.statics.search = function(query) {
+    const regex = new RegExp(query, 'i'); // i for case insensitive
+    return this.find({
+        $or: [
+            { name: regex },
+            { description: regex },
+            { category: regex },
+            { tags: regex }
+        ]
+    });
+};
+
+// Method to filter products by category
+productSchema.statics.filterByCategory = function(category) {
+    return this.find({ category });
+};
+
+// Method to get featured products
+productSchema.statics.getFeaturedProducts = function() {
+    return this.find({ isFeatured: true });
+};
+
+// Method to get products with pagination
+productSchema.statics.getPaginatedProducts = function(page = 1, limit = 10) {
+    const skip = (page - 1) * limit;
+    return this.find()
+        .skip(skip)
+        .limit(limit);
+};
+
+// Method to get discounted products
+productSchema.statics.getDiscountedProducts = function() {
+    return this.find({ discount: { $gt: 0 } });
+};
+
+// Method to get products by price range
+productSchema.statics.getProductsByPriceRange = function(minPrice, maxPrice) {
+    return this.find({ price: { $gte: minPrice, $lte: maxPrice } });
+};
+
+// Method to get products by rating
+productSchema.statics.getProductsByRating = function(minRating) {
+    return this.find({ 'ratings.average': { $gte: minRating } });
+};
+
+// Method to get products by tags
+productSchema.statics.getProductsByTags = function(tags) {
+    return this.find({ tags: { $in: tags } });
+};
+
+// Method to perform bulk update of stock
+productSchema.statics.bulkUpdateStock = async function(productUpdates) {
+    const bulkOps = productUpdates.map(update => ({
+        updateOne: {
+            filter: { _id: update.id },
+            update: { $inc: { stock: update.quantity } }
+        }
+    }));
+    return this.bulkWrite(bulkOps);
+};
+
+// Method to bulk delete products
+productSchema.statics.bulkDelete = async function(productIds) {
+    const bulkOps = productIds.map(id => ({
+        updateOne: {
+            filter: { _id: id },
+            update: { $set: { deleted: true } }
+        }
+    }));
+    return this.bulkWrite(bulkOps);
+};
+
+// Method to handle product recommendations based on category and tags
+productSchema.statics.getRecommendedProducts = function(category, tags) {
+    return this.find({ 
+        category, 
+        tags: { $in: tags },
+        deleted: false 
+    }).limit(10);
+};
+
+// Method to get product count by category
+productSchema.statics.getProductCountByCategory = function() {
+    return this.aggregate([
+        { $match: { deleted: false } },
+        { $group: { _id: "$category", count: { $sum: 1 } } }
+    ]);
 };
 
 module.exports = mongoose.model('Product', productSchema);

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <meta name="description" content="Enhanced E-Commerce platform for a better shopping experience.">
     <meta name="keywords" content="e-commerce, online shopping, electronics, gadgets">
 </head>
+
 <body>
     <header>
         <div class="container">
@@ -75,12 +77,12 @@
         <div class="modal-content">
             <span class="close">&times;</span>
             <h2 id="authTitle">Login</h2>
-            <form id="authForm1">
-                <label for="email1">Email:</label>
-                <input type="email" id="email1" name="email" required>
-                <label for="password1">Password:</label>
-                <input type="password" id="password1" name="password" required>
-                <button type="submit" id="authSubmit1">Submit</button>
+            <form id="authForm">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+                <button type="submit" id="authSubmit">Submit</button>
             </form>
         </div>
     </div>
@@ -119,5 +121,15 @@
     </footer>
     <script src="cart.js"></script>
     <script src="main.js"></script>
+    <script src="darkmode.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const checkoutButton = document.getElementById('checkoutButton');
+            checkoutButton.addEventListener('click', () => {
+                window.location.href = 'checkout.html';
+            });
+        });
+    </script>
 </body>
+
 </html>

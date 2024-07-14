@@ -6,29 +6,138 @@
     <meta name="description" content="A professional login page suitable for business-level applications with enhanced security and user interface.">
     <title>Login</title>
     <link rel="stylesheet" href="style2.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 400px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+
+        input[type="email"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .password-toggle {
+            float: right;
+            margin-top: -30px;
+            margin-right: 10px;
+            cursor: pointer;
+            color: #007BFF;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 20px;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .form-toggle {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .form-toggle a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+
+        .form-toggle a:hover {
+            text-decoration: underline;
+        }
+
+        #loader {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 16px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 16px solid #007BFF;
+            width: 120px;
+            height: 120px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #feedback {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+
+        #feedback.show {
+            display: block;
+        }
+
+        .success {
+            background-color: #4CAF50;
+        }
+
+        .error {
+            background-color: #f44336;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <h1>Login</h1>
-    </header>
-    <main>
-        <div class="container">
-            <!-- Login Form -->
-            <form id="loginForm" class="active-form">
-                <h2>Login</h2>
-                <label for="login-email">Email:</label>
-                <input id="login-email" type="email" name="email" placeholder="Enter your email" required>
-                <label for="login-password">Password:</label>
-                <input id="login-password" type="password" name="password" placeholder="Enter your password" required>
-                <span class="password-toggle" onclick="togglePasswordVisibility('login-password')">Show</span>
-                <button type="submit">Log In</button>
-                <div class="form-toggle">
-                    <p>Not registered? <a href="create.html">Create an account</a></p>
-                </div>
-                <label><input type="checkbox" name="remember"> Remember Me</label>
-            </form>
-        </div>
-    </main>
+    <div class="container">
+        <!-- Login Form -->
+        <form id="loginForm" class="active-form">
+            <h2>Login</h2>
+            <label for="login-email">Email:</label>
+            <input id="login-email" type="email" name="email" placeholder="Enter your email" required>
+            <label for="login-password">Password:</label>
+            <input id="login-password" type="password" name="password" placeholder="Enter your password" required>
+            <span class="password-toggle" onclick="togglePasswordVisibility('login-password')">Show</span>
+            <button type="submit">Log In</button>
+            <div class="form-toggle">
+                <p>Not registered? <a href="create.html">Create an account</a></p>
+            </div>
+            <label><input type="checkbox" name="remember"> Remember Me</label>
+        </form>
+    </div>
     <div id="loader"></div>
     <div id="feedback"></div>
     <script>
@@ -50,21 +159,23 @@
                 e.preventDefault();
                 const email = e.target.email.value;
                 const password = e.target.password.value;
+                const remember = e.target.remember.checked;
                 loader.style.display = 'block';
 
                 try {
-                    const response = await fetch('/api/login', {
+                    const response = await fetch('/api/auth/login', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, password })
+                        body: JSON.stringify({ email, password, remember })
                     });
                     const data = await response.json();
                     loader.style.display = 'none';
-                    
+
                     if (data.success) {
                         feedback.className = 'success';
                         feedback.textContent = 'Login successful. Redirecting...';
                         feedback.style.display = 'block';
+                        localStorage.setItem('token', data.token);
                         setTimeout(() => {
                             window.location.href = 'index.html';
                         }, 2000);
@@ -81,6 +192,224 @@
                     feedback.style.display = 'block';
                 }
             });
+
+            // Prefill username if "Remember Me" was checked
+            const rememberedUsername = localStorage.getItem('remember');
+            if (rememberedUsername) {
+                const emailInput = document.querySelector('#loginForm input[type="email"]');
+                if (emailInput) emailInput.value = rememberedUsername;
+            }
+
+            // Display the registered username
+            const registeredUsername = localStorage.getItem('registeredUsername');
+            if (registeredUsername) {
+                showFeedback(`Welcome back, ${registeredUsername}! Please log in.`, 'info');
+                localStorage.removeItem('registeredUsername'); // Clear after displaying
+            }
+
+            // Enhancements
+            // 1. Sanitize inputs before submission
+            function sanitizeInput(value) {
+                const temp = document.createElement('div');
+                temp.textContent = value;
+                return temp.innerHTML;
+            }
+
+            document.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    const inputs = form.querySelectorAll('input');
+                    inputs.forEach(input => {
+                        input.value = sanitizeInput(input.value);
+                    });
+                });
+            });
+
+            // 2. Session timeout handling
+            let sessionTimeout;
+            function resetSessionTimeout() {
+                clearTimeout(sessionTimeout);
+                sessionTimeout = setTimeout(() => {
+                    alert('Session expired. Please log in again.');
+                    window.location.reload();
+                }, 30 * 60 * 1000); // 30 minutes
+            }
+
+            document.addEventListener('mousemove', resetSessionTimeout);
+            document.addEventListener('keypress', resetSessionTimeout);
+
+            // 3. Detailed error messages
+            function showError(input, message) {
+                input.classList.add('input-error');
+                const errorSpan = input.nextElementSibling;
+                errorSpan.textContent = message;
+                errorSpan.classList.add('error-message');
+            }
+
+            // 4. Remove detailed error messages on input
+            document.querySelectorAll('input').forEach(input => {
+                input.addEventListener('input', function() {
+                    if (input.classList.contains('input-error')) {
+                        input.classList.remove('input-error');
+                        const errorSpan = input.nextElementSibling;
+                        errorSpan.textContent = '';
+                        errorSpan.classList.remove('error-message');
+                    }
+                });
+            });
+
+            // 5. Enhance feedback with different types (info, warning)
+            function showFeedback(message, type) {
+                const feedback = document.getElementById('feedback');
+                feedback.textContent = message;
+                feedback.className = type;
+                feedback.style.display = 'block';
+                setTimeout(() => {
+                    feedback.style.display = 'none';
+                }, 5000);
+            }
+
+            // 6. Implement "Forgot Password" functionality (simulation)
+            document.querySelector('#forgot-password-link').addEventListener('click', function(e) {
+                e.preventDefault();
+                const email = prompt('Please enter your email to reset password:');
+                if (email && validateEmail(email)) {
+                    // Simulate sending reset password link
+                    showFeedback('A reset password link has been sent to your email.', 'info');
+                } else {
+                    showFeedback('Please enter a valid email address.', 'error');
+                }
+            });
+
+            // 7. Confirmation before leaving page with unsaved changes
+            let formChanged = false;
+            document.querySelectorAll('input').forEach(input => {
+                input.addEventListener('change', () => formChanged = true);
+            });
+            window.addEventListener('beforeunload', (e) => {
+                if (formChanged) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
+            });
+
+            // 8. Enhanced accessibility with focus indicators
+            const style = document.createElement('style');
+            style.innerHTML = `
+                input:focus, button:focus {
+                    outline: 2px solid #0056b3;
+                    outline-offset: 2px;
+                }
+            `;
+            document.head.appendChild(style);
+
+            // 9. Display user's input while typing with real-time feedback
+            document.querySelectorAll('input').forEach(input => {
+                input.addEventListener('input', function() {
+                    const feedbackSpan = document.getElementById(input.name + '-feedback');
+                    if (feedbackSpan) {
+                        feedbackSpan.textContent = input.value;
+                    }
+                });
+            });
+
+            // Add real-time feedback spans
+            document.getElementById('loginForm').insertAdjacentHTML('beforeend', '<span id="username-feedback"></span>');
+            document.getElementById('loginForm').insertAdjacentHTML('beforeend', '<span id="email-feedback"></span>');
+
+            // 10. Animation for form transitions
+            style.innerHTML += `
+                .hidden {
+                    opacity: 0;
+                    transition: opacity 0.5s ease-in-out;
+                }
+                .active-form {
+                    opacity: 1;
+                    transition: opacity 0.5s ease-in-out;
+                }
+            `;
+            document.head.appendChild(style);
+
+            // Apply animation classes
+            document.getElementById('loginForm').classList.add('active-form');
+            document.getElementById('registerForm').classList.add('hidden');
+
+            // 11. Prevent multiple form submissions
+            document.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    const submitButton = form.querySelector('button[type="submit"]');
+                    submitButton.disabled = true;
+                    setTimeout(() => {
+                        submitButton.disabled = false;
+                    }, 3000);
+                });
+            });
+
+            // 12. Add Two-Factor Authentication (2FA)
+            function requestTwoFactorAuth(email) {
+                // Simulate 2FA request
+                const code = prompt('Enter the 2FA code sent to your email:');
+                return code === '123456'; // Example 2FA code
+            }
+
+            document.getElementById('loginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const emailInput = document.querySelector('#loginForm input[type="email"]');
+                const passwordInput = document.querySelector('#loginForm input[type="password"]');
+                if (validateForm(this) && requestTwoFactorAuth(emailInput.value)) {
+                    this.submit(); // Proceed with form submission if 2FA is successful
+                } else {
+                    showFeedback('Invalid 2FA code. Please try again.', 'error');
+                }
+            });
+
+            // 13. Rate Limiting
+            let loginAttempts = 0;
+            const maxLoginAttempts = 10;
+
+            document.getElementById('loginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                if (loginAttempts >= maxLoginAttempts) {
+                    showFeedback('Too many login attempts. Please try again later.', 'error');
+                    return;
+                }
+                if (validateForm(this)) {
+                    loginAttempts++;
+                    this.submit();
+                }
+            });
+
+            // 14. Implement CSRF Protection
+            function getCsrfToken() {
+                return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            }
+
+            document.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    const csrfToken = getCsrfToken();
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = '_csrf';
+                    csrfInput.value = csrfToken;
+                    form.appendChild(csrfInput);
+                });
+            });
+
+            // Log errors for administrative review
+            function logError(error) {
+                fetch('/log-error', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ error: error.toString() })
+                });
+            }
+
+            // Manage user session
+            function manageSession(token) {
+                localStorage.setItem('authToken', token);
+                // Further session management logic can be implemented here
+            }
         });
     </script>
 </body>

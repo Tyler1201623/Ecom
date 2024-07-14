@@ -13,8 +13,8 @@ const {
 const { authenticate } = require('../middleware/authMiddleware');
 const { validateRequest } = require('../middleware/validateRequestMiddleware');
 const { errorHandler } = require('../middleware/errorHandlerMiddleware');
-const { logAction, logMiddleware } = require('../middleware/logMiddleware'); // Ensure correct import
-const { cacheMiddleware } = require('../middleware/cacheMiddleware');
+const { logAction, logMiddleware } = require('../middleware/logMiddleware');
+const { cacheMiddleware, clearCache } = require('../middleware/cacheMiddleware');
 const { checkUserRole } = require('../middleware/roleMiddleware');
 
 const router = express.Router();
@@ -61,7 +61,7 @@ const applyCouponValidationRules = [
  * @desc    Get the cart for the authenticated user
  * @access  Private
  */
-router.get('/', authenticate, logMiddleware, cacheMiddleware, logAction('getCart'), getCart);
+router.get('/', authenticate, logMiddleware, cacheMiddleware(600), logAction('getCart'), getCart);
 
 /**
  * @route   POST /api/cart
@@ -71,7 +71,7 @@ router.get('/', authenticate, logMiddleware, cacheMiddleware, logAction('getCart
 router.post('/', authenticate, apiLimiter, addProductValidationRules, validateRequest, logAction('addToCart'), async (req, res, next) => {
     try {
         await addToCart(req, res);
-        cacheMiddleware.clear(req.user.id); // Clear cache on cart update
+        clearCache(`/api/cart?userId=${req.user.id}`); // Clear cache on cart update
     } catch (err) {
         next(err);
     }
@@ -85,7 +85,7 @@ router.post('/', authenticate, apiLimiter, addProductValidationRules, validateRe
 router.delete('/', authenticate, apiLimiter, removeProductValidationRules, validateRequest, logAction('removeFromCart'), async (req, res, next) => {
     try {
         await removeFromCart(req, res);
-        cacheMiddleware.clear(req.user.id); // Clear cache on cart update
+        clearCache(`/api/cart?userId=${req.user.id}`); // Clear cache on cart update
     } catch (err) {
         next(err);
     }
@@ -99,7 +99,7 @@ router.delete('/', authenticate, apiLimiter, removeProductValidationRules, valid
 router.put('/quantity', authenticate, updateLimiter, updateQuantityValidationRules, validateRequest, logAction('updateProductQuantity'), async (req, res, next) => {
     try {
         await updateProductQuantity(req, res);
-        cacheMiddleware.clear(req.user.id); // Clear cache on cart update
+        clearCache(`/api/cart?userId=${req.user.id}`); // Clear cache on cart update
     } catch (err) {
         next(err);
     }
@@ -113,7 +113,7 @@ router.put('/quantity', authenticate, updateLimiter, updateQuantityValidationRul
 router.delete('/clear', authenticate, updateLimiter, checkUserRole('admin'), logAction('clearCart'), async (req, res, next) => {
     try {
         await clearCart(req, res);
-        cacheMiddleware.clear(req.user.id); // Clear cache on cart update
+        clearCache(`/api/cart?userId=${req.user.id}`); // Clear cache on cart update
     } catch (err) {
         next(err);
     }

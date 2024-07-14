@@ -561,6 +561,10 @@ form .validation-error {
     color: #ddd;
 }
 
+.dark-mode .product-info h3 {
+    color: white; /* Ensure product names are visible in dark mode */
+}
+
 .dark-mode .modal-content {
     background-color: #333;
     color: #ddd;

@@ -2,6 +2,23 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const rateLimit = require('express-rate-limit');
 const crypto = require('crypto');
+const config = require('config');
+const winston = require('winston');
+
+// Initialize Winston logger
+const logger = winston.createLogger({
+    level: 'info',
+    format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.printf(({ timestamp, level, message, meta }) => {
+            return `${timestamp} [${level}] ${message} ${meta ? JSON.stringify(meta) : ''}`;
+        })
+    ),
+    transports: [
+        new winston.transports.Console(),
+        new winston.transports.File({ filename: 'logs/authMiddleware.log' })
+    ]
+});
 
 // Rate Limiting middleware for authentication attempts
 const authRateLimiter = rateLimit({
@@ -12,7 +29,7 @@ const authRateLimiter = rateLimit({
 
 // Middleware to log IP address of requests
 const logIpAddress = (req, res, next) => {
-    console.log(`Request from IP: ${req.ip}`);
+    logger.info('Request IP', { ip: req.ip });
     next();
 };
 
@@ -24,7 +41,7 @@ const authenticate = async (req, res, next) => {
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.SECRET_KEY);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || config.get('jwtSecret'));
         req.user = await User.findById(decoded.id).select('-password');
         if (!req.user) {
             return res.status(401).json({ message: 'User not found, authorization denied' });
@@ -42,7 +59,7 @@ const authenticate = async (req, res, next) => {
         await req.user.save();
         next();
     } catch (err) {
-        console.error('Authentication error:', err.message);
+        logger.error('Authentication error', { message: err.message });
         if (err.name === 'TokenExpiredError') {
             return res.status(401).json({ message: 'Token expired' });
         }
@@ -76,14 +93,14 @@ const handleRefreshToken = async (req, res, next) => {
     }
 
     try {
-        const decoded = jwt.verify(refreshToken, process.env.SECRET_KEY);
+        const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || config.get('jwtRefreshSecret'));
         req.user = await User.findById(decoded.id).select('-password');
         if (!req.user) {
             return res.status(401).json({ message: 'User not found, authorization denied' });
         }
         next();
     } catch (err) {
-        console.error('Refresh token error:', err.message);
+        logger.error('Refresh token error', { message: err.message });
         if (err.name === 'TokenExpiredError') {
             return res.status(401).json({ message: 'Refresh token expired' });
         }
@@ -99,7 +116,7 @@ const revokeToken = async (req, res) => {
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.SECRET_KEY);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || config.get('jwtSecret'));
         const user = await User.findById(decoded.id);
         if (!user) {
             return res.status(400).json({ message: 'User not found' });
@@ -111,7 +128,7 @@ const revokeToken = async (req, res) => {
 
         res.status(200).json({ message: 'Token revoked successfully' });
     } catch (err) {
-        console.error('Error revoking token:', err.message);
+        logger.error('Error revoking token', { message: err.message });
         res.status(500).json({ message: 'Server error' });
     }
 };

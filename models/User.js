@@ -23,7 +23,6 @@ const userSchema = new mongoose.Schema({
         minlength: [8, 'Password must be at least 8 characters long'],
         validate: {
             validator: function(value) {
-                // Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character
                 return /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}/.test(value);
             },
             message: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
@@ -148,42 +147,52 @@ userSchema.methods.removeSession = async function (sessionId) {
 };
 
 // Soft delete middleware
-userSchema.pre('find', function (next) {
+const softDeleteMiddleware = function(next) {
     this.where({ deleted: false });
     next();
-});
+};
 
-// Soft delete for findOne
-userSchema.pre('findOne', function (next) {
-    this.where({ deleted: false });
-    next();
-});
-
-// Soft delete for findOneAndUpdate
-userSchema.pre('findOneAndUpdate', function (next) {
-    this.where({ deleted: false });
-    next();
-});
-
-// Soft delete for findOneAndDelete
-userSchema.pre('findOneAndDelete', function (next) {
-    this.where({ deleted: false });
-    next();
-});
-
-// Soft delete for findOneAndRemove
-userSchema.pre('findOneAndRemove', function (next) {
-    this.where({ deleted: false });
-    next();
-});
-
-// Soft delete for updateOne
-userSchema.pre('updateOne', function (next) {
-    this.where({ deleted: false });
-    next();
-});
+userSchema.pre('find', softDeleteMiddleware);
+userSchema.pre('findOne', softDeleteMiddleware);
+userSchema.pre('findOneAndUpdate', softDeleteMiddleware);
+userSchema.pre('findOneAndDelete', softDeleteMiddleware);
+userSchema.pre('findOneAndRemove', softDeleteMiddleware);
+userSchema.pre('updateOne', softDeleteMiddleware);
 
 // Ensure email uniqueness case-insensitively
 userSchema.plugin(uniqueValidator, { message: 'Error, expected {PATH} to be unique.' });
+
+// Method to add token to blacklist
+userSchema.methods.addToTokenBlacklist = async function (token) {
+    this.tokenBlacklist.push(token);
+    await this.save();
+};
+
+// Method to check if token is blacklisted
+userSchema.methods.isTokenBlacklisted = function (token) {
+    return this.tokenBlacklist.includes(token);
+};
+
+// Method to refresh token management
+userSchema.methods.addRefreshToken = async function (token) {
+    this.refreshTokens.push(token);
+    await this.save();
+};
+
+userSchema.methods.removeRefreshToken = async function (token) {
+    this.refreshTokens = this.refreshTokens.filter(refreshToken => refreshToken !== token);
+    await this.save();
+};
+
+userSchema.methods.clearRefreshTokens = async function () {
+    this.refreshTokens = [];
+    await this.save();
+};
+
+// Middleware to auto-update `updatedAt` field before any update
+userSchema.pre('findOneAndUpdate', function(next) {
+    this.set({ updatedAt: Date.now() });
+    next();
+});
 
 module.exports = mongoose.model('User', userSchema);

@@ -1,9 +1,16 @@
 const fs = require('fs');
 const path = require('path');
+const { format } = require('date-fns');
+
+// Ensure logs directory exists
+const logsDir = path.join(__dirname, '../logs');
+if (!fs.existsSync(logsDir)) {
+    fs.mkdirSync(logsDir, { recursive: true });
+}
 
 // Create a write stream for logging to a file
-const logFilePath = path.join(__dirname, '../logs', 'access.log');
-const logStream = fs.createWriteStream(logFilePath, { flags: 'a' });
+const logFilePath = path.join(logsDir, 'access.log');
+let logStream = fs.createWriteStream(logFilePath, { flags: 'a' });
 
 // Function to log general requests
 function logMiddleware(req, res, next) {
@@ -22,7 +29,7 @@ function logMiddleware(req, res, next) {
             responseTime: `${responseTime}ms`,
         };
 
-        const logMessage = `[${logEntry.timestamp}] ${logEntry.method} ${logEntry.url} - Status: ${logEntry.responseStatus} - Response Time: ${logEntry.responseTime} - Headers: ${JSON.stringify(logEntry.headers)} - Body: ${JSON.stringify(logEntry.body)}\n`;
+        const logMessage = `[${logEntry.timestamp}] ${logEntry.method} ${logEntry.url} - Status: ${logEntry.responseStatus} - Response Time: ${logEntry.responseTime}ms - Headers: ${JSON.stringify(logEntry.headers)} - Body: ${JSON.stringify(logEntry.body)}\n`;
         console.log(logMessage);
         logStream.write(logMessage);
 
@@ -58,4 +65,51 @@ process.on('unhandledRejection', (reason, promise) => {
     logStream.write(logMessage);
 });
 
-module.exports = { logMiddleware, logAction };
+// Function to rotate log files daily
+function rotateLogs() {
+    const dateStr = format(new Date(), 'yyyy-MM-dd');
+    const newLogFilePath = path.join(logsDir, `access-${dateStr}.log`);
+    logStream.end();
+    fs.renameSync(logFilePath, newLogFilePath);
+    logStream = fs.createWriteStream(logFilePath, { flags: 'a' });
+    console.log(`[${new Date().toISOString()}] Log file rotated to ${newLogFilePath}`);
+}
+
+// Schedule log rotation at midnight
+const midnight = new Date();
+midnight.setHours(24, 0, 0, 0);
+const timeToMidnight = midnight.getTime() - Date.now();
+setTimeout(() => {
+    rotateLogs();
+    setInterval(rotateLogs, 24 * 60 * 60 * 1000); // Rotate every 24 hours
+}, timeToMidnight);
+
+// Function to clear the log file
+function clearLogFile() {
+    fs.truncate(logFilePath, 0, (err) => {
+        if (err) {
+            console.error(`[ERROR] Failed to clear log file: ${err.message}`);
+        } else {
+            console.log(`[INFO] Log file cleared: ${logFilePath}`);
+        }
+    });
+}
+
+// Middleware to log system stats
+function systemStatsLogger(req, res, next) {
+    const memoryUsage = process.memoryUsage();
+    const cpuUsage = process.cpuUsage();
+    const uptime = process.uptime();
+
+    const statsMessage = `[STATS] Memory Usage: ${JSON.stringify(memoryUsage)}, CPU Usage: ${JSON.stringify(cpuUsage)}, Uptime: ${uptime}s`;
+    console.info(statsMessage);
+    logStream.write(statsMessage + '\n');
+    next();
+}
+
+module.exports = {
+    logMiddleware,
+    logAction,
+    clearLogFile,
+    systemStatsLogger
+};
