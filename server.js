@@ -14,9 +14,7 @@ const compression = require('compression');
 const hpp = require('hpp');
 const braintree = require('braintree');
 const nodemailer = require('nodemailer');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-
+const config = require('config');
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
 const cartRoutes = require('./routes/cartRoutes');
@@ -91,53 +89,12 @@ app.use(speedLimiter);
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// User Authentication Routes
-app.post('/api/auth/register', async (req, res) => {
-    try {
-        const { email, password, confirmPassword } = req.body;
-
-        if (password !== confirmPassword) {
-            return res.status(400).json({ success: false, message: 'Passwords do not match' });
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 12);
-
-        const newUser = new User({
-            email,
-            password: hashedPassword
-        });
-
-        await newUser.save();
-
-        res.status(201).json({ success: true, message: 'User registered successfully' });
-    } catch (err) {
-        res.status(500).json({ success: false, message: 'Server error', error: err.message });
-    }
-});
-
-app.post('/api/auth/login', async (req, res) => {
-    try {
-        const { email, password } = req.body;
-
-        const user = await User.findOne({ email });
-
-        if (!user) {
-            return res.status(401).json({ success: false, message: 'Invalid email or password' });
-        }
-
-        const isMatch = await bcrypt.compare(password, user.password);
-
-        if (!isMatch) {
-            return res.status(401).json({ success: false, message: 'Invalid email or password' });
-        }
-
-        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
-        res.status(200).json({ success: true, token });
-    } catch (err) {
-        res.status(500).json({ success: false, message: 'Server error', error: err.message });
-    }
-});
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/checkout', checkoutRoutes);
 
 // Serve static HTML files
 app.get('/', (req, res) => {

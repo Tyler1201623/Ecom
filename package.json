@@ -14,7 +14,9 @@
     "body-parser": "^1.20.2",
     "braintree": "^3.23.0",
     "compression": "^1.7.4",
+    "config": "^3.3.12",
     "cors": "^2.8.5",
+    "date-fns": "^3.6.0",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "express-rate-limit": "^7.3.1",
@@ -35,7 +37,8 @@
     "selfsigned": "^2.4.1",
     "slugify": "^1.6.6",
     "stripe": "^16.2.0",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "winston": "^3.13.1"
   },
   "devDependencies": {
     "jest": "^29.5.0",
