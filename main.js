@@ -1,38 +1,220 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const priceRange = document.getElementById('priceRange');
-    const priceValue = document.getElementById('priceValue');
-    const searchBar = document.getElementById('searchBar');
-    const cartButton = document.getElementById('cartButton');
-    const loginButton = document.getElementById('loginButton');
-    const registerButton = document.getElementById('registerButton');
-    const profileButton = document.getElementById('profileButton');
-    const wishlistButton = document.getElementById('wishlistButton');
-    const darkModeSwitch = document.getElementById('darkModeSwitch');
-    const authModal = document.getElementById('authModal');
-    const authForm = document.getElementById('authForm');
-    const closeAuthModal = authModal.querySelector('.close');
-    const productModal = document.getElementById('productModal');
-    const closeProductModal = productModal.querySelector('.close');
-    const loadingSpinner = document.getElementById('loadingSpinner');
-    const emptyCartButton = document.getElementById('emptyCartButton');
-    const applyDiscountButton = document.getElementById('applyDiscountButton');
-    const checkoutButton = document.getElementById('checkoutButton');
-    const recommendationsContainer = document.getElementById('recommendations');
-    const sortSelect = document.getElementById('sortSelect');
-    const notification = document.getElementById('notification');
-    const logoutButton = document.getElementById('logoutButton');
+    const elements = {
+        priceRange: document.getElementById('priceRange'),
+        priceValue: document.getElementById('priceValue'),
+        searchBar: document.getElementById('searchBar'),
+        cartButton: document.getElementById('cartButton'),
+        loginButton: document.getElementById('loginButton'),
+        registerButton: document.getElementById('registerButton'),
+        profileButton: document.getElementById('profileButton'),
+        wishlistButton: document.getElementById('wishlistButton'),
+        darkModeSwitch: document.getElementById('darkModeSwitch'),
+        authModal: document.getElementById('authModal'),
+        authForm: document.getElementById('authForm'),
+        closeAuthModal: document.querySelector('#authModal .close'),
+        productModal: document.getElementById('productModal'),
+        closeProductModal: document.querySelector('#productModal .close'),
+        loadingSpinner: document.getElementById('loadingSpinner'),
+        emptyCartButton: document.getElementById('emptyCartButton'),
+        applyDiscountButton: document.getElementById('applyDiscountButton'),
+        checkoutButton: document.getElementById('checkoutButton'),
+        recommendationsContainer: document.getElementById('recommendations'),
+        sortSelect: document.getElementById('sortSelect'),
+        notification: document.getElementById('notification'),
+        logoutButton: document.getElementById('logoutButton'),
+    };
 
-    // Redirect to login and register pages
-    loginButton.addEventListener('click', () => {
-        window.location.href = 'Login.html';
-    });
+    const initAuthButtons = () => {
+        if (elements.loginButton) {
+            elements.loginButton.addEventListener('click', () => {
+                window.location.href = 'Login.html';
+            });
+        }
+        if (elements.registerButton) {
+            elements.registerButton.addEventListener('click', () => {
+                window.location.href = 'create.html';
+            });
+        }
+    };
 
-    registerButton.addEventListener('click', () => {
-        window.location.href = 'create.html';
-    });
+    const initProductEvents = () => {
+        if (elements.priceRange) {
+            elements.priceRange.addEventListener('input', () => {
+                const maxPrice = elements.priceRange.value;
+                elements.priceValue.textContent = `Max Price: $${maxPrice}`;
+                const productElements = document.querySelectorAll('.product');
+                productElements.forEach(product => {
+                    const productPrice = parseFloat(product.dataset.price);
+                    product.style.display = (productPrice > maxPrice) ? 'none' : 'block';
+                });
+            });
+        }
+        if (elements.searchBar) {
+            elements.searchBar.addEventListener('input', () => {
+                const query = elements.searchBar.value.toLowerCase();
+                const productElements = document.querySelectorAll('.product');
+                productElements.forEach(product => {
+                    const productName = product.dataset.name.toLowerCase();
+                    product.style.display = (productName.includes(query)) ? 'block' : 'none';
+                });
+            });
+        }
+        if (elements.sortSelect) {
+            elements.sortSelect.addEventListener('change', () => {
+                const sortValue = elements.sortSelect.value;
+                sortProducts(sortValue);
+            });
+        }
+    };
 
-    // Fetch products from the product_details.json
-    async function fetchProducts() {
+    const initModalEvents = () => {
+        if (elements.closeAuthModal) {
+            elements.closeAuthModal.addEventListener('click', () => {
+                elements.authModal.style.display = 'none';
+            });
+        }
+        if (elements.closeProductModal) {
+            elements.closeProductModal.addEventListener('click', () => {
+                elements.productModal.style.display = 'none';
+            });
+        }
+        window.addEventListener('click', (event) => {
+            if (event.target === elements.authModal) {
+                elements.authModal.style.display = 'none';
+            }
+            if (event.target === elements.productModal) {
+                elements.productModal.style.display = 'none';
+            }
+        });
+    };
+
+    const initDarkModeToggle = () => {
+        if (elements.darkModeSwitch) {
+            elements.darkModeSwitch.addEventListener('change', () => {
+                document.body.classList.toggle('dark-mode');
+                localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+            });
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.body.classList.add('dark-mode');
+                elements.darkModeSwitch.checked = true;
+            }
+        }
+    };
+
+    const initCartButtons = () => {
+        if (elements.emptyCartButton) {
+            elements.emptyCartButton.addEventListener('click', () => {
+                window.cart.emptyCart();
+                showNotification('Cart emptied', 'info');
+            });
+        }
+        if (elements.applyDiscountButton) {
+            elements.applyDiscountButton.addEventListener('click', () => {
+                const discountCodeInput = document.getElementById('discountCodeInput').value;
+                window.cart.applyDiscount(discountCodeInput);
+            });
+        }
+        if (elements.checkoutButton) {
+            elements.checkoutButton.addEventListener('click', () => {
+                window.location.href = 'checkout.html';
+            });
+        }
+    };
+
+    const initAuthForm = () => {
+        if (elements.authForm) {
+            elements.authForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const email = event.target.email.value;
+                const password = event.target.password.value;
+                try {
+                    const response = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        localStorage.setItem('token', data.token);
+                        window.location.href = 'index.html';
+                    } else {
+                        alert('Login failed: ' + data.message);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+                elements.authModal.style.display = 'none';
+            });
+        }
+    };
+
+    const initLogoutButton = () => {
+        if (elements.logoutButton) {
+            elements.logoutButton.addEventListener('click', () => {
+                localStorage.removeItem('token');
+                window.location.href = 'index.html';
+            });
+        }
+    };
+
+    const loadRecommendations = async () => {
+        try {
+            const response = await fetch('/api/recommendations');
+            const recommendations = await response.json();
+
+            elements.recommendationsContainer.innerHTML = '';
+            recommendations.forEach(recommendation => {
+                const recommendationElement = document.createElement('div');
+                recommendationElement.classList.add('recommendation');
+                recommendationElement.innerHTML = `
+                    <img src="images/${recommendation.imageUrl}" alt="${recommendation.name}">
+                    <div class="recommendation-info">
+                        <h3>${recommendation.name}</h3>
+                        <p>$${recommendation.price}</p>
+                        <p>${recommendation.description}</p>
+                        <button class="add-to-cart">Add to Cart</button>
+                    </div>
+                `;
+                elements.recommendationsContainer.appendChild(recommendationElement);
+            });
+            attachProductEventListeners();
+        } catch (error) {
+            console.error('Error fetching recommendations:', error);
+        }
+    };
+
+    const sortProducts = (criteria) => {
+        const productsContainer = document.getElementById('products');
+        const products = Array.from(productsContainer.children);
+
+        products.sort((a, b) => {
+            const priceA = parseFloat(a.dataset.price);
+            const priceB = parseFloat(b.dataset.price);
+
+            if (criteria === 'price-asc') {
+                return priceA - priceB;
+            } else if (criteria === 'price-desc') {
+                return priceB - priceA;
+            } else if (criteria === 'name-asc') {
+                return a.dataset.name.localeCompare(b.dataset.name);
+            } else if (criteria === 'name-desc') {
+                return b.dataset.name.localeCompare(a.dataset.name);
+            }
+        });
+
+        products.forEach(product => productsContainer.appendChild(product));
+    };
+
+    const showNotification = (message, type) => {
+        elements.notification.textContent = message;
+        elements.notification.className = `notification ${type}`;
+        elements.notification.classList.add('show');
+        setTimeout(() => {
+            elements.notification.classList.remove('show');
+        }, 3000);
+    };
+
+    const fetchProducts = async () => {
         try {
             const response = await fetch('product_details.json');
             const products = await response.json();
@@ -60,10 +242,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Error fetching products:', error);
         }
-    }
+    };
 
-    // Attach event listeners to product elements
-    function attachProductEventListeners() {
+    const attachProductEventListeners = () => {
         const productElements = document.querySelectorAll('.product');
         productElements.forEach(product => {
             const button = product.querySelector('.add-to-cart');
@@ -82,187 +263,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 showProductModal({ name, price, description, imageUrl });
             });
         });
-    }
+    };
 
-    // Filter products by price range
-    priceRange.addEventListener('input', () => {
-        const maxPrice = priceRange.value;
-        priceValue.textContent = `Max Price: $${maxPrice}`;
-        const productElements = document.querySelectorAll('.product');
-        productElements.forEach(product => {
-            const productPrice = parseInt(product.dataset.price);
-            product.style.display = (productPrice > maxPrice) ? 'none' : 'block';
-        });
-    });
+    const showProductModal = (product) => {
+        elements.productModal.style.display = 'block';
+        document.getElementById('productTitle').textContent = product.name;
+        document.getElementById('productImage').src = product.imageUrl;
+        document.getElementById('productDescription').textContent = product.description;
+        document.getElementById('productPrice').textContent = `$${product.price.toFixed(2)}`;
 
-    // Search products
-    searchBar.addEventListener('input', () => {
-        const query = searchBar.value.toLowerCase();
-        const productElements = document.querySelectorAll('.product');
-        productElements.forEach(product => {
-            const productName = product.dataset.name.toLowerCase();
-            product.style.display = (productName.includes(query)) ? 'block' : 'none';
-        });
-    });
+        const addToCartButton = document.getElementById('addToCartFromModal');
+        addToCartButton.onclick = () => {
+            window.cart.addToCart(product);
+            showNotification('Product added to cart', 'success');
+            elements.productModal.style.display = 'none';
+        };
+    };
 
-    // Auth modal functionality
-    closeAuthModal.addEventListener('click', () => {
-        authModal.style.display = 'none';
-    });
+    // Initialize elements and event listeners
+    initAuthButtons();
+    initProductEvents();
+    initModalEvents();
+    initDarkModeToggle();
+    initCartButtons();
+    initAuthForm();
+    initLogoutButton();
 
-    window.addEventListener('click', (event) => {
-        if (event.target === authModal) {
-            authModal.style.display = 'none';
-        }
-    });
-
-    authForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const email = event.target.email.value;
-        const password = event.target.password.value;
-        try {
-            const response = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-            const data = await response.json();
-            if (data.success) {
-                localStorage.setItem('token', data.token);
-                window.location.href = 'index.html';
-            } else {
-                alert('Login failed: ' + data.message);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-        }
-        authModal.style.display = 'none';
-    });
-
-    // Product modal functionality
-    closeProductModal.addEventListener('click', () => {
-        productModal.style.display = 'none';
-    });
-
-    window.addEventListener('click', (event) => {
-        if (event.target === productModal) {
-            productModal.style.display = 'none';
-        }
-    });
-
-    // Dark mode toggle
-    darkModeSwitch.addEventListener('change', () => {
-        document.body.classList.toggle('dark-mode');
-        localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
-    });
-
-    // Initialize cart and products
+    // Load data
     window.cart.loadCart();
     fetchProducts();
-
-    // Load dark mode setting from local storage
-    if (localStorage.getItem('darkMode') === 'true') {
-        document.body.classList.add('dark-mode');
-        darkModeSwitch.checked = true;
-    }
-
-    // Empty cart functionality
-    emptyCartButton.addEventListener('click', () => {
-        window.cart.emptyCart();
-        showNotification('Cart emptied', 'info');
-    });
-
-    // Apply discount functionality
-    applyDiscountButton.addEventListener('click', () => {
-        const discountCodeInput = document.getElementById('discountCodeInput').value;
-        window.cart.applyDiscount(discountCodeInput);
-    });
-
-    // Redirect to checkout page
-    checkoutButton.addEventListener('click', () => {
-        window.location.href = 'checkout.html';
-    });
-
-    // Enhanced: Personalized Recommendations
-    async function fetchRecommendations() {
-        try {
-            const response = await fetch('/api/recommendations');
-            const recommendations = await response.json();
-
-            recommendationsContainer.innerHTML = '';
-            recommendations.forEach(recommendation => {
-                const recommendationElement = document.createElement('div');
-                recommendationElement.classList.add('recommendation');
-                recommendationElement.innerHTML = `
-                    <img src="images/${recommendation.imageUrl}" alt="${recommendation.name}">
-                    <div class="recommendation-info">
-                        <h3>${recommendation.name}</h3>
-                        <p>$${recommendation.price}</p>
-                        <p>${recommendation.description}</p>
-                        <button class="add-to-cart">Add to Cart</button>
-                    </div>
-                `;
-                recommendationsContainer.appendChild(recommendationElement);
-            });
-            attachProductEventListeners();
-        } catch (error) {
-            console.error('Error fetching recommendations:', error);
-        }
-    }
-
-    // Load recommendations
-    fetchRecommendations();
-
-    // Enhanced: Product Sorting
-    if (sortSelect) {
-        sortSelect.addEventListener('change', () => {
-            const sortValue = sortSelect.value;
-            sortProducts(sortValue);
-        });
-    }
-
-    function sortProducts(criteria) {
-        const productsContainer = document.getElementById('products');
-        const products = Array.from(productsContainer.children);
-
-        products.sort((a, b) => {
-            const priceA = parseFloat(a.dataset.price);
-            const priceB = parseFloat(b.dataset.price);
-
-            if (criteria === 'price-asc') {
-                return priceA - priceB;
-            } else if (criteria === 'price-desc') {
-                return priceB - priceA;
-            } else if (criteria === 'name-asc') {
-                return a.dataset.name.localeCompare(b.dataset.name);
-            } else if (criteria === 'name-desc') {
-                return b.dataset.name.localeCompare(a.dataset.name);
-            }
-        });
-
-        products.forEach(product => productsContainer.appendChild(product));
-    }
-
-    // Enhanced: User Authentication Handling
-    // Check if user is logged in
-    const token = localStorage.getItem('token');
-    if (token) {
-        loginButton.style.display = 'none';
-        registerButton.style.display = 'none';
-        profileButton.style.display = 'block';
-        logoutButton.style.display = 'block';
-    } else {
-        loginButton.style.display = 'block';
-        registerButton.style.display = 'block';
-        profileButton.style.display = 'none';
-        logoutButton.style.display = 'none';
-    }
-
-    // Logout functionality
-    logoutButton.addEventListener('click', () => {
-        localStorage.removeItem('token');
-        window.location.href = 'index.html';
-    });
+    loadRecommendations();
 });
 
 const cart = {
@@ -347,15 +377,6 @@ const cart = {
 };
 
 window.cart = cart;
-
-function showNotification(message, type) {
-    notification.textContent = message;
-    notification.className = `notification ${type}`;
-    notification.classList.add('show');
-    setTimeout(() => {
-        notification.classList.remove('show');
-    }, 3000);
-}
 
 // CSS for loading spinner
 const style = document.createElement('style');
@@ -460,9 +481,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showLoading(isLoading) {
         if (isLoading) {
-            loadingSpinner.style.display = 'block';
+            elements.loadingSpinner.style.display = 'block';
         } else {
-            loadingSpinner.style.display = 'none';
+            elements.loadingSpinner.style.display = 'none';
         }
     }
 
@@ -497,3 +518,72 @@ function showProductModal(product) {
         productModal.style.display = 'none';
     };
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    const cartCount = document.getElementById('cartCount');
+    const cartItemsSummary = document.getElementById('cartItemsSummary');
+    const cartTotal = document.getElementById('cartTotal');
+
+    if (cartCount) {
+        cartCount.textContent = window.cart.items.reduce((sum, item) => sum + item.quantity, 0);
+    }
+
+    if (cartItemsSummary) {
+        cartItemsSummary.innerHTML = '';
+        let total = 0;
+        if (window.cart.items.length === 0) {
+            cartItemsSummary.innerHTML = '<li>Your cart is empty.</li>';
+        } else {
+            window.cart.items.forEach(item => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <div class="cart-item">
+                        <img src="${item.imageUrl}" alt="${item.name}">
+                        <div class="cart-item-info">
+                            <h4>${item.name}</h4>
+                            <p>$${item.price.toFixed(2)} x ${item.quantity}</p>
+                        </div>
+                        <div class="cart-item-total">
+                            $${(item.price * item.quantity).toFixed(2)}
+                        </div>
+                    </div>
+                `;
+                cartItemsSummary.appendChild(li);
+                total += item.price * item.quantity;
+            });
+        }
+        if (cartTotal) {
+            cartTotal.textContent = `Total: $${total.toFixed(2)} USD`;
+        }
+    }
+
+    fetch('/api/recommendations')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            const recommendationsContainer = document.getElementById('recommendations');
+            recommendationsContainer.innerHTML = '';
+            data.forEach(recommendation => {
+                const recommendationElement = document.createElement('div');
+                recommendationElement.classList.add('recommendation');
+                recommendationElement.innerHTML = `
+                    <img src="images/${recommendation.imageUrl}" alt="${recommendation.name}">
+                    <div class="recommendation-info">
+                        <h3>${recommendation.name}</h3>
+                        <p>$${recommendation.price}</p>
+                        <p>${recommendation.description}</p>
+                        <button class="add-to-cart">Add to Cart</button>
+                    </div>
+                `;
+                recommendationsContainer.appendChild(recommendationElement);
+            });
+            attachProductEventListeners();
+        })
+        .catch(error => {
+            console.error('Error fetching recommendations:', error);
+        });
+});
